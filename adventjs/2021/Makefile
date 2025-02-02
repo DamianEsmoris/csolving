@@ -1,7 +1,7 @@
 COMMON_PATH=../../common/
-CFLAGS=-I$(COMMON_PATH)
+CFLAGS=-I$(COMMON_PATH) -lm
 BUILD_PATH=./builds/
-COMMON_OBJS=$(COMMON_PATH)/linklst.o
+COMMON_OBJS=$(COMMON_PATH)/linklst.o $(COMMON_PATH)/hashmap.c
 
 SRC_FOLDERS := $(shell ls -d ./[0-9][0-9])
 
