@@ -1,8 +1,7 @@
-linklst.c:
+linklst:
 	gcc -c linklst.c linklst.o
 
-all: linklst.c
+all: linklst
 
 clean:
-	ls *.o; read -p "are you sure to delete all *.o on the current dir? (y/N) " resp;
-	if [[ "$$resp" =~ "y" ]]; then rm -fv *.o; else echo -e '\nok... operation cancelled'; fi
+	echo `ls *.o; echo; read -p "are you sure to delete all *.o on the current dir? (y/N) " resp; [[ $${resp,,} =~ (y|yes) ]] && rm -fv *.o || echo -e '\nok... operation cancelled'`

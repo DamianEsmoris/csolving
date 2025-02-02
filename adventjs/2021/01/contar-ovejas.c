@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "linklst.h"
+#include "../../../common/linklst.h"
 
 #define linklst(l,...) do {                                        \
     Sheep sheep[] = { __VA_ARGS__ };                               \
@@ -36,12 +36,12 @@ int str_contains_char(char* str, char chr)
     return *str != 0;
 }
 
-Linklst filter_sheep(Linklst sheep, Color color, char *chars)
+Linklst filter_sheep(Linklst sheep, Color color, const char *chars)
 {
     Linklst filtered_sheep = NULL;
     Node* node = sheep->first;
     while (node) {
-        Sheep* sheep = node->ref;
+        Sheep* sheep = (Sheep*)node->ref;
         if (sheep->color == color) {
             size_t i = 0; 
             while (chars[i] != 0 && str_contains_char(sheep->name, chars[i]))
@@ -59,7 +59,7 @@ void print_sheep_names(Linklst l)
     if (!l) return;
     Node* node = l->first;
     while (node) {
-        Sheep* sheep = node->ref;
+        Sheep* sheep = (Sheep*)node->ref;
         printf("- %s\n", sheep->name);
         node = node->next;
     }
