@@ -16,3 +16,4 @@ void nonfree_pop(Linklst *l);
 int length(Linklst l);
 void* last(Linklst l);
 void* prev(Linklst l, void* ref);
+Linklst map(Linklst l, void*(fn)(void*));

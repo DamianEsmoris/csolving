@@ -20,7 +20,8 @@ void push(Linklst *l, void *ref)
     lh->last->next = NULL;
 }
 
-void free_lst(Linklst *l) {
+void free_lst(Linklst *l)
+{
     if (!*l) return;
     Head* lh = *l;
     if (lh) {
@@ -38,7 +39,8 @@ void free_lst(Linklst *l) {
     *l = NULL;
 }
 
-void nonfree_pop(Linklst *l) {
+void nonfree_pop(Linklst *l)
+{
     if (!*l || !(*l)->first){
         free_lst(l);
         return;
@@ -75,15 +77,28 @@ int length(Linklst l)
     return count;
 }
 
-void* last(Linklst l) {
+void* last(Linklst l)
+{
     return (!l || !l->first) ? NULL : l->last->ref;
 }
 
-void* prev(Linklst l, void* ref) {
+void* prev(Linklst l, void* ref)
+{
     if (!l || !l->first)
         return NULL;
     Node* node = l->first;
     while (node && node->next->ref != ref)
         node = node->next;
     return node ? node->ref : NULL;
+}
+
+Linklst map(Linklst l, void*(fn)(void*))
+{
+    Node *node = l->first;
+    Linklst result = NULL;
+    while (node) {
+        push(&result, fn(node->ref));
+        node = node->next;
+    }
+    return result;
 }

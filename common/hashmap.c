@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "hashmap.h"
+#include "str.h"
 
 #define assert(assertion, msg, ...) if (!assertion) {\
     printf("[ASSERTION FAILED] (%s:%d): " #msg, __FILE_NAME__, __LINE__, __VA_ARGS__); \
@@ -14,14 +15,6 @@ size_t INC_MULT = 1;
 #define print(msg, ...) if (dbug) \
     printf(msg __VA_OPT__(,) __VA_ARGS__)
 
-int str_eq(const char* s1, const char* s2)
-{
-    while (*s1 && (*s1 == *s2)) {
-        s1++;
-        s2++;
-    }
-    return *s1 == *s2;
-}
 
 unsigned long calculate_hash(char* str, size_t size)
 {
