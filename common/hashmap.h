@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "linklst.h"
 
 #define set(hm, ke, va) do { \
     KvPair kv___LINE__ = { (void*) va, ke };\
@@ -23,3 +24,4 @@ void initalize_hmap(HashMap* hmap);
 void* store_pair(HashMap *hmap, KvPair kv);
 void* get_pair(HashMap hmap, char* key);
 void free_hmap(HashMap hmap);
+Linklst keys(HashMap hmap);
