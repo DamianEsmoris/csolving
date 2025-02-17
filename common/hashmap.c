@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdlib.h>
 #include "hashmap.h"
 #include "str.h"
 
@@ -9,7 +10,7 @@
 }
 
 size_t INITAL_CAP = 10;
-size_t INC_MULT = 1;
+double INC_MULT = 0.5;
 
 #define dbug 0
 #define print(msg, ...) if (dbug) \
@@ -41,21 +42,36 @@ void increase_hmap(HashMap hmap)
 {
     KvPair *old_slots = hmap->slots;
     size_t old_size = hmap->size;
+    size_t old_occupied = hmap->occupied;
     hmap->size += hmap->size * INC_MULT;
     hmap->slots = malloc(hmap->size*sizeof(KvPair));
-    for (size_t i = 0; i < old_size; i++) {
+    old_occupied = hmap->occupied;
+    hmap->occupied = 0;;
+    for (size_t i = 0; i < hmap->size; i++)
+            hmap->slots[i] = (KvPair){ NULL, NULL };
+    size_t i, found;
+    i = found = 0;
+    while (found < old_occupied && i < old_size) {
         if (old_slots[i].key) {
-            size_t hash = calculate_hash(old_slots[i].key, hmap->size);
-            hmap->slots[hash] = old_slots[i];
+            store_pair(&hmap, old_slots[i]);
+            found++;
         }
-        if (!hmap->slots[i].key)
-            hmap->slots[i] = (KvPair){ NULL, NULL };
-    }
-    for (size_t i = old_size; i < hmap->size; i++) {
-        if (!hmap->slots[i].key)
-            hmap->slots[i] = (KvPair){ NULL, NULL };
+        i++;
     }
     free(old_slots);
+}
+
+void hmap_free_keys(HashMap hmap) {
+    size_t found = 0;
+    size_t i = 0;
+    while (found < hmap->occupied) {
+        if (hmap->slots[i].key) {
+            free(hmap->slots[i].key);
+            found++;
+        }
+        i++;
+    }
+    free(hmap);
 }
 
 void free_hmap(HashMap hmap)
@@ -85,15 +101,17 @@ void* store_pair(HashMap *hmap, KvPair kv)
     print("  # hmap: %ld/%ld \n", map->occupied, map->size);
     unsigned long hash = calculate_hash(kv.key, map->size);
     print("    + (sto) the key is '%s'\n", kv.key);
+    print("      + %ld && %d\n", hash,map->slots[hash].key != NULL);
     if (map->slots[hash].key) {
-        int bound = hash;
-        do 
+        unsigned long bound = hash;
+        do {
             hash = (hash+1) % map->size;
-        while (
-            map->slots[hash].key != NULL
-            && !str_eq(map->slots[hash].key, kv.key)
+            print("      + %ld && %d\n", hash,map->slots[hash].key != NULL);
+        } while (
+            (map->slots[hash].key && !str_eq(map->slots[hash].key, kv.key))
             && hash != bound
         );
+        print("    + (sto) %ld == %ld\n", hash, bound);
         assert((hash != bound), "Full iteration... the hasmap doesn't have any free space and the pre reservation didn't catch it!", NULL);
         print("    + (sto) the hash after collision chk is %ld\n", hash);
     }
@@ -113,12 +131,11 @@ void* get_pair(HashMap hmap, char* key)
     if (!hmap->slots[hash].key)
         return NULL;
     if (!str_eq(hmap->slots[hash].key, key)) {
-        int bound = hash;
+        unsigned long bound = hash;
         do 
             hash = (hash+1) % hmap->size;
         while (
-            hmap->slots[hash].key 
-            && !str_eq(hmap->slots[hash].key, key)
+            (!hmap->slots[hash].key || !str_eq(hmap->slots[hash].key, key))
             && hash != bound
         );
         if (hash == bound || (!hmap->slots[hash].key || !str_eq(hmap->slots[hash].key, key)))
@@ -143,4 +160,49 @@ Linklst keys(HashMap hmap)
         i++;
     }
     return keys;
+}
+
+void hmap_clone(HashMap source, HashMap *target)
+{
+    *target = (MapHeader*)malloc(sizeof(MapHeader));
+    (*target)->occupied = source->occupied;
+    (*target)->size = source->size;
+    (*target)->slots = malloc(source->size*sizeof(KvPair));
+    print("  # hmap: structure cloned (size: %ld/occupied: %ld)\n", (*target)->size, (*target)->occupied);
+    for (size_t hash = 0; hash < source->size; hash++) {
+        str_set(
+            &(*target)->slots[hash].key,
+            source->slots[hash].key
+        );
+        (*target)->slots[hash].ref = source->slots[hash].ref;
+    }
+
+    print("  # hmap: all the data was cloned");
+}
+
+void remove_by_key(HashMap hmap, char* key)
+{
+    unsigned long hash = calculate_hash(key, hmap->size);
+    print("    + (rem) the key is '%s'\n", key);
+    if (!hmap->slots[hash].key)
+        return;
+    if (!str_eq(hmap->slots[hash].key, key)) {
+        unsigned long bound = hash;
+        do
+            hash = (hash+1) % hmap->size;
+        while (
+            (!hmap->slots[hash].key || !str_eq(hmap->slots[hash].key, key))
+            && hash != bound
+        );
+        if (hash == bound || (!hmap->slots[hash].key || !str_eq(hmap->slots[hash].key, key))) {
+            print("      - (rem) the key '%s' is not present\n", key);
+            return;
+        }
+    }
+    free(hmap->slots[hash].key);
+    print("      + (rem) key '%s' removed\n", key);
+    print("  # hmap: occupied: %ld\n", hmap->occupied);
+    hmap->occupied--;
+    hmap->slots[hash].ref = NULL;
+    hmap->slots[hash].key = NULL;
 }
